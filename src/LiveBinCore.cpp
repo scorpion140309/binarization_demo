@@ -111,7 +111,7 @@ void sc::LiveBinCore::Create_(void)
 
 	//
 	this->ary_filenames_.clear();
-	this->ary_filenames_.push_back("flower.png");
+	this->ary_filenames_.push_back("input.png");
 	this->ary_filenames_.push_back("gray.png");
 	this->ary_filenames_.push_back("dst.png");
 
@@ -171,6 +171,9 @@ sc::LiveBin::evt sc::LiveBinCore::FuncInit_(void)
 {
 	sc::LiveBin::evt ret_evt = sc::LiveBin::evt::GoNext;
 
+	//
+	cv::destroyAllWindows();
+
 	auto id_src = static_cast<size_t>(sc::LiveBinCore::img_type::e_SRC);
 	this->ary_img_[id_src] = cv::imread(this->ary_filenames_[0]);
 	if (this->ary_img_[id_src].empty() == false)
@@ -215,6 +218,10 @@ sc::LiveBin::evt sc::LiveBinCore::FuncIdle_(void)
 	case cvkey::ESC:
 	case 'q':
 		ret_evt = sc::LiveBin::evt::GoExit;
+		break;
+	case 'r':
+	case 'R':
+		ret_evt = sc::LiveBin::evt::GoReset;
 		break;
 	case ' ':
 		ret_evt = sc::LiveBin::evt::GoNext;
