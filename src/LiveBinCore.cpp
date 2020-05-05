@@ -29,19 +29,6 @@ namespace
 //
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-//
-static unsigned int sttc_my_rand(void)
-{
-	static unsigned int x = 0xD9363228;
-	static unsigned int y = 0x021A79C9;
-	static unsigned int z = 0x7604820B;
-	static unsigned int w = 0xD18E1939;
-	unsigned int t;
-
-	t = x ^ (x << 11);
-	x = y; y = z; z = w;
-	return w = (w ^ (w >> 19)) ^ (t ^ (t >> 8));
-}
 
 ///////////////////////////////////////////////////////////////
 //
@@ -93,19 +80,6 @@ void sc::LiveBinCore::Create_(void)
 	this->key_ = -1;
 	this->key_delay_ = 3;
 
-	// array of threshold
-	this->ary_threshold_.clear();
-	this->ary_threshold_.push_back(0);
-	int t;
-	for (t = 1; t < 255; t++)
-	{
-		this->ary_threshold_.push_back(0);
-		//this->ary_threshold_.push_back(2 * t - 256);
-		//this->ary_threshold_.push_back(127 - t);
-		//this->ary_threshold_.push_back(t - 127);
-		//this->ary_threshold_.push_back(t-128);
-	}
-	this->ary_threshold_.push_back(0);
 
 	// Binalizing(Halftoning) Funcitons
 	//this->halftoning_type_ = sc::LiveBinCore::ht_type::e_FIXED_THRESH;
@@ -117,14 +91,10 @@ void sc::LiveBinCore::Create_(void)
 
 	//
 	this->ary_filenames_.clear();
-	this->ary_filenames_.push_back("input.jpg");
-	//this->ary_filenames_.push_back("input.png");
+	//this->ary_filenames_.push_back("input.jpg");
+	this->ary_filenames_.push_back("flower.png");
 	this->ary_filenames_.push_back("gray.png");
 	this->ary_filenames_.push_back("dst.png");
-
-	//
-	this->count_x_ = 0;
-	this->count_y_ = 0;
 
 	return;
 }
@@ -248,10 +218,8 @@ sc::LiveBin::evt sc::LiveBinCore::FuncDo_(void)
 	cv::Mat* p_img_gray = (this->GetImgPtr_(sc::LiveBinCore::img_type::e_GRAY));
 	cv::Mat *p_img_dst = (this->GetImgPtr_(sc::LiveBinCore::img_type::e_DST));
 
-	if (this->count_x_ == 0 && this->count_y_ == 0)
-	{
-		*p_img_dst = cv::Scalar::all(PIX_INIT);
-	}
+	//
+	*p_img_dst = cv::Scalar::all(PIX_INIT);
 
 	//
 	ret_evt = (this->*dict_bin_functions_[static_cast<int>(this->halftoning_type_)])(p_img_gray, p_img_dst);
@@ -301,13 +269,6 @@ sc::LiveBin::evt sc::LiveBinCore::FuncDone_(void)
 
 	return ret_evt;
 }
-//
-//sc::LiveBin::evt sc::LiveBinCore::FuncPause_(void)
-//{
-//	sc::LiveBin::evt ret_evt = sc::LiveBin::evt::GoNext;
-//
-//	return ret_evt;
-//}
 //
 sc::LiveBin::evt sc::LiveBinCore::FuncReset_(void)
 {

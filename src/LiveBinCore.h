@@ -8,8 +8,6 @@
 //
 #include <vector>
 #include <map>
-//#include <functional>
-//#include <map>
 #include <string>
 
 namespace cv
@@ -47,11 +45,6 @@ namespace sc
 
 		//
 		std::vector<std::string> ary_filenames_;
-
-		//
-		size_t count_x_;
-		size_t count_y_;
-		std::vector<int> ary_threshold_;
 
 	private:
 		void Create_(void);
