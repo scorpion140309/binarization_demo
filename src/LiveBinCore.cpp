@@ -12,6 +12,8 @@
 #include <opencv2/opencv.hpp>
 #pragma warning(pop)
 
+//
+#include <Binarization/scBinarizationFixedThreshold.h>
 
 //
 namespace
@@ -104,14 +106,16 @@ void sc::LiveBinCore::Create_(void)
 	this->ary_threshold_.push_back(0);
 
 	// Binalizing(Halftoning) Funcitons
-	this->halftoning_type_ = sc::LiveBinCore::ht_type::e_ERR_DIFFUSION;
+	this->halftoning_type_ = sc::LiveBinCore::ht_type::e_FIXED_THRESH;
+	//this->halftoning_type_ = sc::LiveBinCore::ht_type::e_ERR_DIFFUSION;
 	this->dict_bin_functions_[static_cast<int>(sc::LiveBinCore::ht_type::e_FIXED_THRESH)] = &LiveBinCore::Binaliztion_FixedThresh_;
 	this->dict_bin_functions_[static_cast<int>(sc::LiveBinCore::ht_type::e_RANDOM_THRESH)] = &LiveBinCore::Binaliztion_RandomThresh_;
 	this->dict_bin_functions_[static_cast<int>(sc::LiveBinCore::ht_type::e_ERR_DIFFUSION)] = &LiveBinCore::Binaliztion_ErrorDiffusion_;
 
 	//
 	this->ary_filenames_.clear();
-	this->ary_filenames_.push_back("input.png");
+	this->ary_filenames_.push_back("input.jpg");
+	//this->ary_filenames_.push_back("input.png");
 	this->ary_filenames_.push_back("gray.png");
 	this->ary_filenames_.push_back("dst.png");
 
@@ -249,29 +253,7 @@ sc::LiveBin::evt sc::LiveBinCore::FuncDo_(void)
 	//
 	ret_evt = (this->*dict_bin_functions_[static_cast<int>(this->halftoning_type_)])(p_img_gray, p_img_dst);
 
-	//
-	if (this->count_y_ >= p_img_dst->rows)
-	{
-		this->count_y_ = 0;
-		ret_evt = sc::LiveBin::evt::GoNext;
-
-		//
-		switch (this->halftoning_type_)
-		{
-		case sc::LiveBinCore::ht_type::e_FIXED_THRESH:
-			this->halftoning_type_ = sc::LiveBinCore::ht_type::e_RANDOM_THRESH;
-				break;
-		case sc::LiveBinCore::ht_type::e_RANDOM_THRESH:
-			this->halftoning_type_ = sc::LiveBinCore::ht_type::e_ERR_DIFFUSION;
-			break;
-		case sc::LiveBinCore::ht_type::e_ERR_DIFFUSION:
-			this->halftoning_type_ = sc::LiveBinCore::ht_type::e_FIXED_THRESH;
-			break;
-		default:
-			break;
-		}
-	}
-	else
+	if (ret_evt == sc::LiveBin::evt::Stay)
 	{
 		switch (this->key_)
 		{
@@ -290,6 +272,7 @@ sc::LiveBin::evt sc::LiveBinCore::FuncDo_(void)
 
 	return ret_evt;
 }
+
 //
 sc::LiveBin::evt sc::LiveBinCore::FuncDone_(void)
 {
@@ -338,33 +321,8 @@ sc::LiveBin::evt sc::LiveBinCore::Binaliztion_FixedThresh_(const cv::Mat* a_p_im
 	sc::LiveBin::evt ret_evt = sc::LiveBin::evt::GoNext;
 
 	//
-	unsigned char pix_max = 255;
-	int threshold = 127;
-	const unsigned char* p_gray_line = a_p_img_src->data + this->count_y_ * a_p_img_src->step;
-	unsigned char* p_dst_line = a_p_img_dst->data + this->count_y_ * a_p_img_dst->step;
-
-	do
-	{
-		if (p_gray_line[this->count_x_] > threshold)
-		{
-			p_dst_line[this->count_x_] = pix_max;
-		}
-		else
-		{
-			p_dst_line[this->count_x_] = 0;
-		}
-
-		this->count_x_++;
-		if (this->count_x_ >= a_p_img_dst->cols)
-		{
-			this->count_x_ = 0;
-			this->count_y_++;
-			if (this->count_y_ >= a_p_img_dst->rows)
-			{
-				ret_evt = sc::LiveBin::evt::GoNext;
-			}
-		}
-	} while (this->count_x_ != 0);
+	sc::Binarization::FixedThreshold bin(a_p_img_src->cols, a_p_img_src->rows);
+	bin.Exe(a_p_img_src->data, a_p_img_dst->data, a_p_img_src->step);
 
 	return ret_evt;
 }
