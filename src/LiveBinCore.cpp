@@ -15,6 +15,7 @@
 //
 #include <Binarization/scBinarizationFixedThreshold.h>
 #include <Binarization/scBinarizationRandomThreshold.h>
+#include <Binarization/scBinarizationErrorDiffusion.h>
 
 //
 namespace
@@ -108,8 +109,8 @@ void sc::LiveBinCore::Create_(void)
 
 	// Binalizing(Halftoning) Funcitons
 	//this->halftoning_type_ = sc::LiveBinCore::ht_type::e_FIXED_THRESH;
-	this->halftoning_type_ = sc::LiveBinCore::ht_type::e_RANDOM_THRESH;
-	//this->halftoning_type_ = sc::LiveBinCore::ht_type::e_ERR_DIFFUSION;
+	//this->halftoning_type_ = sc::LiveBinCore::ht_type::e_RANDOM_THRESH;
+	this->halftoning_type_ = sc::LiveBinCore::ht_type::e_ERR_DIFFUSION;
 	this->dict_bin_functions_[static_cast<int>(sc::LiveBinCore::ht_type::e_FIXED_THRESH)] = &LiveBinCore::Binaliztion_FixedThresh_;
 	this->dict_bin_functions_[static_cast<int>(sc::LiveBinCore::ht_type::e_RANDOM_THRESH)] = &LiveBinCore::Binaliztion_RandomThresh_;
 	this->dict_bin_functions_[static_cast<int>(sc::LiveBinCore::ht_type::e_ERR_DIFFUSION)] = &LiveBinCore::Binaliztion_ErrorDiffusion_;
@@ -280,6 +281,21 @@ sc::LiveBin::evt sc::LiveBinCore::FuncDone_(void)
 {
 	sc::LiveBin::evt ret_evt = sc::LiveBin::evt::GoNext;
 
+	//
+	switch (this->halftoning_type_)
+	{
+	case sc::LiveBinCore::ht_type::e_FIXED_THRESH:
+		this->halftoning_type_ = sc::LiveBinCore::ht_type::e_RANDOM_THRESH;
+		break;
+	case sc::LiveBinCore::ht_type::e_RANDOM_THRESH:
+		this->halftoning_type_ = sc::LiveBinCore::ht_type::e_ERR_DIFFUSION;
+		break;
+	case sc::LiveBinCore::ht_type::e_ERR_DIFFUSION:
+		this->halftoning_type_ = sc::LiveBinCore::ht_type::e_FIXED_THRESH;
+		break;
+	}
+
+	//
 	auto id_dst = static_cast<size_t>(sc::LiveBinCore::img_type::e_DST);
 	cv::imwrite(this->ary_filenames_[id_dst], this->ary_img_[id_dst]);
 
@@ -347,110 +363,9 @@ sc::LiveBin::evt sc::LiveBinCore::Binaliztion_ErrorDiffusion_(const cv::Mat* a_p
 	sc::LiveBin::evt ret_evt = sc::LiveBin::evt::GoNext;
 
 	//
-	int pix_max = 255;
-	//int threshold = 127;
-	const unsigned char* p_gray_line = a_p_img_src->data + this->count_y_ * a_p_img_src->step;
-	unsigned char* p_dst_line = a_p_img_dst->data + this->count_y_ * a_p_img_dst->step;
+	sc::Binarization::ErrorDiffusion bin(a_p_img_src->cols, a_p_img_src->rows);
+	bin.Exe(a_p_img_src->data, a_p_img_dst->data, a_p_img_src->step);
 
-	//
-	const int ERR_LINE_NUM = 2;
-	const int margin_x = 1;
-	size_t ERR_LINE_W = a_p_img_src->cols + 2 * (size_t)margin_x;
-	static std::vector < std::vector<int>> st_ary2_err_line(ERR_LINE_NUM);
-	if ((this->count_x_ == 0) && (this->count_y_ == 0))
-	{
-		// error lines are initialized.
-		std::vector < std::vector<int>>::iterator itr;
-		for (itr = st_ary2_err_line.begin(); itr != st_ary2_err_line.end(); itr++)
-		{
-			itr->resize(ERR_LINE_W);
-			size_t x;
-			for (x = 0; x < ERR_LINE_W; x++)
-			{
-				//(*itr)[x] = (sttc_my_rand() & 0x3f) - 0x1f;
-				//(*itr)[x] = (sttc_my_rand() & 0x7f) - 0x3f;
-				(*itr)[x] = (sttc_my_rand() & 0x1ff) - 0xff;
-			}
-		}
-	}
-
-	do
-	{
-		std::vector<int*> ary_p_err_line(ERR_LINE_NUM);
-		int i;
-		for (i = 0; i < ERR_LINE_NUM; i++)
-		{
-			ary_p_err_line[i] = &(st_ary2_err_line[i][0]);
-		}
-
-		//
-		const int SHIFT = 4;
-
-		// pixel value
-		int pix_value_org = p_gray_line[this->count_x_];
-
-		// [0,255] -> [0,4080]
-		// (for calculation accuracy)
-		int pix_value = pix_value_org << SHIFT;
-
-		// adaptive threshold
-		int threshold = this->ary_threshold_[pix_value_org] << SHIFT;
-		// normal threshold
-		//int threshold = 128;
-
-		// add error
-		int err_scaled = pix_value + ary_p_err_line[0][this->count_x_ + margin_x];
-
-		// compare
-		if (err_scaled > threshold)
-		{
-			p_dst_line[this->count_x_] = 0xff;
-			err_scaled -= pix_max << SHIFT;
-		}
-		else
-		{
-			p_dst_line[this->count_x_] = 0;
-		}
-
-		// error(src - dst) diffusion
-		const int ERR_COEF[ERR_LINE_NUM][3] = { {0, 0, 5}, {3, 5, 3} };
-		int y;
-		for (y = 0; y < ERR_LINE_NUM; y++)
-		{
-			int x;
-			for (x = 0; x < 3; x++)
-			{
-				ary_p_err_line[y][this->count_x_ + x] += (err_scaled * ERR_COEF[y][x]) >> SHIFT;
-			}
-		}
-
-		this->count_x_++;
-		if (this->count_x_ >= a_p_img_dst->cols)
-		{
-			this->count_x_ = 0;
-			this->count_y_++;
-			if (this->count_y_ >= a_p_img_dst->rows)
-			{
-				ret_evt = sc::LiveBin::evt::GoNext;
-			}
-		}
-	} while (this->count_x_ != 0);
-
-	// copy err_line[y] to err_line[y - 1] 
-	{
-		size_t x, y;
-		for (y = ERR_LINE_NUM - 1; y > 0; y--)
-		{
-			for (x = 0; x < ERR_LINE_W; x++)
-			{
-				st_ary2_err_line[y - 1][x] = st_ary2_err_line[y][x];
-			}
-		}
-		for (x = 0; x < ERR_LINE_W; x++)
-		{
-			st_ary2_err_line[ERR_LINE_NUM - 1][x] = 0;
-		}
-	}
 	return ret_evt;
 }
 
