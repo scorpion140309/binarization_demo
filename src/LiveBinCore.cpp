@@ -14,6 +14,7 @@
 
 //
 #include <Binarization/scBinarizationFixedThreshold.h>
+#include <Binarization/scBinarizationRandomThreshold.h>
 
 //
 namespace
@@ -106,7 +107,8 @@ void sc::LiveBinCore::Create_(void)
 	this->ary_threshold_.push_back(0);
 
 	// Binalizing(Halftoning) Funcitons
-	this->halftoning_type_ = sc::LiveBinCore::ht_type::e_FIXED_THRESH;
+	//this->halftoning_type_ = sc::LiveBinCore::ht_type::e_FIXED_THRESH;
+	this->halftoning_type_ = sc::LiveBinCore::ht_type::e_RANDOM_THRESH;
 	//this->halftoning_type_ = sc::LiveBinCore::ht_type::e_ERR_DIFFUSION;
 	this->dict_bin_functions_[static_cast<int>(sc::LiveBinCore::ht_type::e_FIXED_THRESH)] = &LiveBinCore::Binaliztion_FixedThresh_;
 	this->dict_bin_functions_[static_cast<int>(sc::LiveBinCore::ht_type::e_RANDOM_THRESH)] = &LiveBinCore::Binaliztion_RandomThresh_;
@@ -333,34 +335,8 @@ sc::LiveBin::evt sc::LiveBinCore::Binaliztion_RandomThresh_(const cv::Mat* a_p_i
 	sc::LiveBin::evt ret_evt = sc::LiveBin::evt::GoNext;
 
 	//
-	unsigned char pix_max = 255;
-	const unsigned char* p_gray_line = a_p_img_src->data + this->count_y_ * a_p_img_src->step;
-	unsigned char* p_dst_line = a_p_img_dst->data + this->count_y_ * a_p_img_dst->step;
-
-	do
-	{
-		int threshold = (sttc_my_rand() & 0xff);
-
-		if (p_gray_line[this->count_x_] > threshold)
-		{
-			p_dst_line[this->count_x_] = pix_max;
-		}
-		else
-		{
-			p_dst_line[this->count_x_] = 0;
-		}
-
-		this->count_x_++;
-		if (this->count_x_ >= a_p_img_dst->cols)
-		{
-			this->count_x_ = 0;
-			this->count_y_++;
-			if (this->count_y_ >= a_p_img_dst->rows)
-			{
-				ret_evt = sc::LiveBin::evt::GoNext;
-			}
-		}
-	} while (this->count_x_ != 0);
+	sc::Binarization::RandomThreshold bin(a_p_img_src->cols, a_p_img_src->rows);
+	bin.Exe(a_p_img_src->data, a_p_img_dst->data, a_p_img_src->step);
 
 	return ret_evt;
 }
