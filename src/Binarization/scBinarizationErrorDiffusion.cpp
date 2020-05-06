@@ -114,8 +114,9 @@ int sc::Binarization::ErrorDiffusion::ExeCore_(const unsigned char* a_p_src_img,
 					ary2_err_line[ERR_LINE_NUM - 1][lx] = 0;
 				}
 			}
-
 		}
+
+		ret_result = 0;
 	}
 	return ret_result;
 }

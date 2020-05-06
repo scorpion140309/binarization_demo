@@ -84,6 +84,7 @@ int sc::Binarization::RandomThreshold::ExeCore_(const unsigned char* a_p_src_img
 				}
 			}
 		}
+		ret_result = 0;
 	}
 	return ret_result;
 }
