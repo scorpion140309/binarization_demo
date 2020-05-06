@@ -16,6 +16,7 @@
 #include <Binarization/scBinarizationFixedThreshold.h>
 #include <Binarization/scBinarizationRandomThreshold.h>
 #include <Binarization/scBinarizationErrorDiffusion.h>
+#include <Binarization/scBinarizationThresholdMatrix.h>
 
 //
 namespace
@@ -82,12 +83,14 @@ void sc::BinCore::Create_(void)
 
 
 	// Binalizing(Halftoning) Funcitons
-	this->halftoning_type_ = sc::BinCore::ht_type::e_FIXED_THRESH;
-	//this->halftoning_type_ = sc::BinDemoCore::ht_type::e_RANDOM_THRESH;
-	//this->halftoning_type_ = sc::BinDemoCore::ht_type::e_ERR_DIFFUSION;
+	//this->halftoning_type_ = sc::BinCore::ht_type::e_FIXED_THRESH;
+	//this->halftoning_type_ = sc::BinCore::ht_type::e_RANDOM_THRESH;
+	//this->halftoning_type_ = sc::BinCore::ht_type::e_ERR_DIFFUSION;
+	this->halftoning_type_ = sc::BinCore::ht_type::e_THRESH_MATRIX;
 	this->dict_bin_functions_[static_cast<int>(sc::BinCore::ht_type::e_FIXED_THRESH)] = &BinCore::Binaliztion_FixedThresh_;
 	this->dict_bin_functions_[static_cast<int>(sc::BinCore::ht_type::e_RANDOM_THRESH)] = &BinCore::Binaliztion_RandomThresh_;
 	this->dict_bin_functions_[static_cast<int>(sc::BinCore::ht_type::e_ERR_DIFFUSION)] = &BinCore::Binaliztion_ErrorDiffusion_;
+	this->dict_bin_functions_[static_cast<int>(sc::BinCore::ht_type::e_THRESH_MATRIX)] = &BinCore::Binaliztion_ThreshMatrix_;
 
 	//
 	this->ary_filenames_.clear();
@@ -259,6 +262,9 @@ sc::BinDemo::evt sc::BinCore::FuncDone_(void)
 		this->halftoning_type_ = sc::BinCore::ht_type::e_ERR_DIFFUSION;
 		break;
 	case sc::BinCore::ht_type::e_ERR_DIFFUSION:
+		this->halftoning_type_ = sc::BinCore::ht_type::e_THRESH_MATRIX;
+		break;
+	case sc::BinCore::ht_type::e_THRESH_MATRIX:
 		this->halftoning_type_ = sc::BinCore::ht_type::e_FIXED_THRESH;
 		break;
 	}
@@ -319,12 +325,25 @@ sc::BinDemo::evt sc::BinCore::Binaliztion_RandomThresh_(const cv::Mat* a_p_img_s
 }
 
 //
-sc::BinDemo::evt sc::BinCore::Binaliztion_ErrorDiffusion_(const cv::Mat* a_p_img_src, cv::Mat * a_p_img_dst)
+sc::BinDemo::evt sc::BinCore::Binaliztion_ErrorDiffusion_(const cv::Mat* a_p_img_src, cv::Mat* a_p_img_dst)
 {
 	sc::BinDemo::evt ret_evt = sc::BinDemo::evt::GoNext;
 
 	//
 	sc::Binarization::ErrorDiffusion bin(a_p_img_src->cols, a_p_img_src->rows);
+	bin.Exe(a_p_img_src->data, a_p_img_dst->data, a_p_img_src->step);
+
+	return ret_evt;
+}
+
+
+//
+sc::BinDemo::evt sc::BinCore::Binaliztion_ThreshMatrix_(const cv::Mat* a_p_img_src, cv::Mat* a_p_img_dst)
+{
+	sc::BinDemo::evt ret_evt = sc::BinDemo::evt::GoNext;
+
+	//
+	sc::Binarization::ThresholdMatrix bin(a_p_img_src->cols, a_p_img_src->rows);
 	bin.Exe(a_p_img_src->data, a_p_img_dst->data, a_p_img_src->step);
 
 	return ret_evt;

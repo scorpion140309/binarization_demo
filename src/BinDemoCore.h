@@ -32,6 +32,7 @@ namespace sc
 			e_FIXED_THRESH,
 			e_RANDOM_THRESH,
 			e_ERR_DIFFUSION,
+			e_THRESH_MATRIX,
 			_NUM_
 		};
 
@@ -71,6 +72,7 @@ namespace sc
 		sc::BinDemo::evt Binaliztion_FixedThresh_(const cv::Mat* a_p_img_src, cv::Mat* a_p_img_dst);
 		sc::BinDemo::evt Binaliztion_RandomThresh_(const cv::Mat* a_p_img_src, cv::Mat* a_p_img_dst);
 		sc::BinDemo::evt Binaliztion_ErrorDiffusion_(const cv::Mat* a_p_img_src, cv::Mat* a_p_img_dst);
+		sc::BinDemo::evt Binaliztion_ThreshMatrix_(const cv::Mat* a_p_img_src, cv::Mat* a_p_img_dst);
 
 		//
 		void CommonProc_(void);
