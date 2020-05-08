@@ -13,9 +13,9 @@ namespace sc
 {
 	struct VecI
 	{
-		int x;
-		int y;
-		int div;
+		long long x;
+		long long y;
+		long long div;
 	};
 	namespace Binarization
 	{

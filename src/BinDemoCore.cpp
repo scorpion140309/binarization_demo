@@ -96,6 +96,7 @@ void sc::BinCore::Create_(void)
 	this->ary_filenames_.clear();
 	//this->ary_filenames_.push_back("input.jpg");
 	this->ary_filenames_.push_back("flower.png");
+	//this->ary_filenames_.push_back("sample.png");
 	this->ary_filenames_.push_back("gray.png");
 	this->ary_filenames_.push_back("dst.png");
 
@@ -106,11 +107,6 @@ void sc::BinCore::Create_(void)
 void sc::BinCore::Destroy_(void)
 {
 	std::vector<cv::Mat>::iterator itr;
-	for (itr = this->ary_img_.begin(); itr != this->ary_img_.end(); itr++)
-	{
-		//delete (*itr);
-		//*itr = nullptr;
-	}
 	this->ary_img_.clear();
 	return;
 }

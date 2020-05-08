@@ -6,8 +6,8 @@
 namespace
 {
 	const int DEFAULT_VEC_X = 10;
-	const int DEFAULT_VEC_Y = 5;
-	const int DEFAULT_DIV = 1;
+	const int DEFAULT_VEC_Y = 50;
+	const int DEFAULT_DIV = 10;
 }
 
 //
@@ -57,11 +57,18 @@ int sc::Binarization::ThresholdMatrix::ExeCore_(const unsigned char* a_p_src_img
 		unsigned char pix_max = this->PixMax();
 		int pix_num = static_cast<int>(this->p_hollday_->Width() * this->p_hollday_->Height());
 		std::vector<int> ary_scaled_th;
-		int range = static_cast<int>(pix_max) - pix_min;
 		int t;
 		for (t = 0; t < pix_num; t++)
 		{
 			int th = ((t * (pix_max - 1)) / pix_num) + 1;
+			//if (t == 0)
+			//{
+			//	th = 0;
+			//}
+			//else
+			//{
+			//	th = 255;
+			//}
 			ary_scaled_th.push_back(th);
 		}
 
@@ -85,6 +92,12 @@ int sc::Binarization::ThresholdMatrix::ExeCore_(const unsigned char* a_p_src_img
 			size_t x;
 			for (x = 0; x < width; x++)
 			{
+				// @@@
+				if (current_x == 0 && current_y == 0)
+				{
+				}
+
+				//
 				int matrix_id = p_th_mtx_line[current_x];
 				int thresh = ary_scaled_th[matrix_id];
 				if (p_current_src_line[x] > thresh)
@@ -111,7 +124,7 @@ int sc::Binarization::ThresholdMatrix::ExeCore_(const unsigned char* a_p_src_img
 				current_shift += shift;
 				if (current_shift >= tile_w)
 				{
-					current_shift = 0;
+					current_shift -= tile_w;
 				}
 			}
 		}

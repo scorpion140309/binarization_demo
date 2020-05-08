@@ -141,12 +141,12 @@ void sc::Binarization::Holladay::Create_(int a_x, int a_y, int a_div)
 	this->ary_vec_[1].div = a_div;
 
 	// @@@
-	//this->ary_vec_[0].x = 10;
-	//this->ary_vec_[0].y = 4;
-	//this->ary_vec_[0].div = 1;
-	//this->ary_vec_[1].x = -6;
-	//this->ary_vec_[1].y = 8;
-	//this->ary_vec_[1].div = 1;
+	this->ary_vec_[0].x = 5;
+	this->ary_vec_[0].y = 2;
+	this->ary_vec_[0].div = 1;
+	this->ary_vec_[1].x = -3;
+	this->ary_vec_[1].y = 4;
+	this->ary_vec_[1].div = 1;
 
 	//
 	this->MakeTile_();
@@ -164,7 +164,7 @@ void sc::Binarization::Holladay::Destroy_(void)
 void sc::Binarization::Holladay::MakeTile_WHS_(void)
 {
 	// pixel num = outer product
-	int pix_num = this->ary_vec_[0].x * this->ary_vec_[1].y - this->ary_vec_[1].x * this->ary_vec_[0].y;
+	long long pix_num = this->ary_vec_[0].x * this->ary_vec_[1].y - this->ary_vec_[1].x * this->ary_vec_[0].y;
 	if (pix_num != 0)
 	{
 		// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
@@ -172,7 +172,9 @@ void sc::Binarization::Holladay::MakeTile_WHS_(void)
 		long long ary_coef[2] = { 0, };
 		this->tile_h_ = sttc_ExtGCD(this->ary_vec_[0].y, this->ary_vec_[1].y, &(ary_coef[0]), &(ary_coef[1]));
 		this->tile_w_ = pix_num / this->tile_h_;
-		this->shift_ = (ary_coef[0] * this->ary_vec_[0].x + ary_coef[1] * this->ary_vec_[1].x) % this->tile_w_;
+		//this->shift_ = (ary_coef[0] * this->ary_vec_[0].x + ary_coef[1] * this->ary_vec_[1].x);
+		this->shift_ = this->tile_w_ - (ary_coef[0] * this->ary_vec_[0].x + ary_coef[1] * this->ary_vec_[1].x);
+		this->shift_ %= this->tile_w_;
 		if (this->shift_ < 0)
 		{
 			this->shift_ = this->shift_ + this->tile_w_;
@@ -198,20 +200,39 @@ void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 	//
 	std::vector<ht_cell> ary_dist;
 
-	// X方向に1ピクセル移動したときの delta u, delta v
+	//
 	double len2_0 = static_cast<double>(this->ary_vec_[0].x) * this->ary_vec_[0].x + static_cast<double>(this->ary_vec_[0].y) * this->ary_vec_[0].y;
-	double x_du = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].x / len2_0;
-	double x_dv = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].y / len2_0;
-	// Y方向に1ピクセル移動したときの delta u, delta v
 	double len2_1 = static_cast<double>(this->ary_vec_[1].x) * this->ary_vec_[1].x + static_cast<double>(this->ary_vec_[1].y) * this->ary_vec_[1].y;
-	double y_du = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].y / len2_1;
-	double y_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].x / len2_1;
+	double len1_0 = std::sqrt(len2_0);
+	double len1_1 = std::sqrt(len2_1);
+	//double len2_01 = len1_0 * len1_1;
+
+	//// X方向に1ピクセル移動したときの delta u, delta v
+	//double x_du = static_cast<double>(this->ary_vec_[0].div * this->ary_vec_[0].x) / (len2_0 * this->ary_vec_[0].x);
+	//double x_dv = - static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].y / (len1_0 * this->ary_vec_[0].x);
+	//// Y方向に1ピクセル移動したときの delta u, delta v
+	//double y_du = x_dv;
+	//double y_dv = - x_du;
+	// X方向に1ピクセル移動したときの delta u, delta v
+	double x_du = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].x / (len1_0 * this->ary_vec_[0].x);
+	double x_dv = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[1].x / (len1_1 * this->ary_vec_[0].x);
+	// Y方向に1ピクセル移動したときの delta u, delta v
+	double y_du = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[0].y / (len1_0 * this->ary_vec_[1].y);
+	double y_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].y / (len1_1 * this->ary_vec_[1].y);
+
+	x_du = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].x / (len2_0);
+	x_dv = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[1].x / (len2_1);
+	y_du = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[0].y / (len2_0);
+	y_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].y / (len2_1);
+
 	int y;
 	int id;
 	for (y = 0, id = 0	; y < this->tile_h_; y++)
 	{
-		double curr_u = (y * y_dv) - std::floor(y * y_dv);
-		double curr_v = (y * y_du) - std::floor(y * y_du);
+		double curr_u = (y * y_du);
+		curr_u = curr_u - std::floor(curr_u);
+		double curr_v = (y * y_dv) - std::floor(y * y_dv);
+		curr_v = curr_v - std::floor(curr_v);
 		int x;
 		for (x = 0; x < this->tile_w_; x++, id++)
 		{
@@ -244,16 +265,16 @@ void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 		this->ary_threh_[itr->id] = th_level;
 	}
 
-//	// @@@
-//	for (y = 0, id = 0; y < this->tile_h_; y++)
-//	{
-//		int x;
-//		for (x = 0; x < this->tile_w_; x++, id++)
-//		{
-//			std::cout << this->ary_threh_[id] << ",";
-//		}
-//		std::cout << std::endl;
-//	}
+	// @@@
+	//for (y = 0, id = 0; y < this->tile_h_; y++)
+	//{
+	//	int x;
+	//	for (x = 0; x < this->tile_w_; x++, id++)
+	//	{
+	//		std::cout << this->ary_threh_[id] << ",";
+	//	}
+	//	std::cout << std::endl;
+	//}
 
 	return;
 }
