@@ -14,9 +14,22 @@ namespace
 }
 
 //
-static int sttc_ExtGCD(int a_x, int a_y, int* a_p_coef_a, int* a_p_coef_b)
+enum class DOT_COL
 {
-	int ret_gcd = 1;
+	e_BLACK = 0,
+	e_WHITE
+};
+
+// - - - - - - - - - - - - - - - - - - - - -
+//
+// not member functions
+//
+// - - - - - - - - - - - - - - - - - - - - -
+
+//
+static long long sttc_ExtGCD(long long a_x, long long a_y, long long* a_p_coef_a, long long* a_p_coef_b)
+{
+	long long ret_gcd = 1;
 	if (a_y == 0) {
 		(*a_p_coef_a) = 1;
 		(*a_p_coef_b) = 0;
@@ -24,19 +37,12 @@ static int sttc_ExtGCD(int a_x, int a_y, int* a_p_coef_a, int* a_p_coef_b)
 	}
 	else
 	{
-		int d = sttc_ExtGCD(a_y, a_x % a_y, a_p_coef_b, a_p_coef_a);
+		long long d = sttc_ExtGCD(a_y, a_x % a_y, a_p_coef_b, a_p_coef_a);
 		a_p_coef_b -= a_x / a_y * (*a_p_coef_a);
 		ret_gcd = d;
 	}
 	return ret_gcd;
 }
-
-//
-enum class DOT_COL
-{
-	e_BLACK = 0,
-	e_WHITE
-};
 
 //
 static double sttc_power_bw(DOT_COL a_bw, double a_u, double a_v)
@@ -117,6 +123,11 @@ sc::Binarization::Holladay::~Holladay(void)
 	return;
 }
 
+//------------------------------------------
+//
+// private
+//
+//------------------------------------------
 // @@@
 // x >= 1, y >= 0
 void sc::Binarization::Holladay::Create_(int a_x, int a_y, int a_div)
@@ -128,6 +139,14 @@ void sc::Binarization::Holladay::Create_(int a_x, int a_y, int a_div)
 	this->ary_vec_[1].x = - a_y;
 	this->ary_vec_[1].y = a_x;
 	this->ary_vec_[1].div = a_div;
+
+	// @@@
+	//this->ary_vec_[0].x = 10;
+	//this->ary_vec_[0].y = 4;
+	//this->ary_vec_[0].div = 1;
+	//this->ary_vec_[1].x = -6;
+	//this->ary_vec_[1].y = 8;
+	//this->ary_vec_[1].div = 1;
 
 	//
 	this->MakeTile_();
@@ -150,7 +169,7 @@ void sc::Binarization::Holladay::MakeTile_WHS_(void)
 	{
 		// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
 		// ax+by=gcd(a,b)
-		int ary_coef[2] = { 0, };
+		long long ary_coef[2] = { 0, };
 		this->tile_h_ = sttc_ExtGCD(this->ary_vec_[0].y, this->ary_vec_[1].y, &(ary_coef[0]), &(ary_coef[1]));
 		this->tile_w_ = pix_num / this->tile_h_;
 		this->shift_ = (ary_coef[0] * this->ary_vec_[0].x + ary_coef[1] * this->ary_vec_[1].x) % this->tile_w_;
@@ -170,6 +189,8 @@ void sc::Binarization::Holladay::MakeTile_WHS_(void)
 	return;
 }
 
+// @@@
+#include <iostream>
 
 //
 void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
@@ -180,11 +201,11 @@ void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 	// X方向に1ピクセル移動したときの delta u, delta v
 	double len2_0 = static_cast<double>(this->ary_vec_[0].x) * this->ary_vec_[0].x + static_cast<double>(this->ary_vec_[0].y) * this->ary_vec_[0].y;
 	double x_du = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].x / len2_0;
-	double x_dv = -static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].y / len2_0;
+	double x_dv = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].y / len2_0;
 	// Y方向に1ピクセル移動したときの delta u, delta v
 	double len2_1 = static_cast<double>(this->ary_vec_[1].x) * this->ary_vec_[1].x + static_cast<double>(this->ary_vec_[1].y) * this->ary_vec_[1].y;
-	double y_du = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].x / len2_1;
-	double y_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].y / len2_1;
+	double y_du = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].y / len2_1;
+	double y_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].x / len2_1;
 	int y;
 	int id;
 	for (y = 0, id = 0	; y < this->tile_h_; y++)
@@ -204,6 +225,7 @@ void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 			ary_dist.push_back(data);
 			this->ary_threh_.push_back(new_th);
 
+			//
 			curr_u += x_du;
 			curr_v += x_dv;
 			curr_u = curr_u - std::floor(curr_u);
@@ -222,6 +244,17 @@ void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 		this->ary_threh_[itr->id] = th_level;
 	}
 
+//	// @@@
+//	for (y = 0, id = 0; y < this->tile_h_; y++)
+//	{
+//		int x;
+//		for (x = 0; x < this->tile_w_; x++, id++)
+//		{
+//			std::cout << this->ary_threh_[id] << ",";
+//		}
+//		std::cout << std::endl;
+//	}
+
 	return;
 }
 
@@ -232,3 +265,45 @@ void sc::Binarization::Holladay::MakeTile_(void)
 	this->MakeTile_ThresholdMatrix_();
 	return;
 }
+
+////////////////////////////////////////////
+//
+// public
+//
+////////////////////////////////////////////
+
+//
+long long sc::Binarization::Holladay::Width(void) const
+{
+	return this->tile_w_;
+}
+
+//
+long long sc::Binarization::Holladay::Height(void) const
+{
+	return this->tile_h_;
+}
+
+//
+long long sc::Binarization::Holladay::Shift(void) const
+{
+	return this->shift_;
+}
+
+//
+const int* sc::Binarization::Holladay::MatrixPtrCst(void) const
+{
+	const int* ret_ptr = nullptr;
+	if (this->ary_threh_.empty() == false)
+	{
+		ret_ptr = &(this->ary_threh_[0]);
+	}
+	return ret_ptr;
+}
+
+//
+long long sc::Binarization::Holladay::TileSize(void) const
+{
+	return this->tile_w_ * this->tile_h_;
+}
+

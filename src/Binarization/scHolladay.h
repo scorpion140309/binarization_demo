@@ -42,6 +42,12 @@ namespace sc
 			Holladay(void);
 			Holladay(int a_x, int a_y, int a_div);
 			~Holladay(void);
+
+			long long Width(void) const;
+			long long Height(void) const;
+			long long Shift(void) const;
+			const int *MatrixPtrCst(void) const;
+			long long TileSize(void) const;
 		};
 	}
 }
