@@ -15,7 +15,7 @@
 //
 namespace
 {
-	long long st_scale = 5;
+	long long st_scale = 1;
 }
 
 //
@@ -147,7 +147,7 @@ void sc::Binarization::Holladay::Create_(int a_x, int a_y, int a_div)
 
 	// @@@
 	volatile bool v_flag_hoge = false;
-	v_flag_hoge = true;
+	//v_flag_hoge = true;
 	if (v_flag_hoge)
 	{
 		this->ary_vec_[0].x = st_scale * 5;
@@ -214,16 +214,20 @@ void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 	double len0 = this->ary_vec_[0].Lenght();
 	double len1 = this->ary_vec_[1].Lenght();
 	// delta u & delta v (when x += 1)
-	double x_du = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].Cos() / len0;
-	double x_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].Cos() / len1;
-	x_du = 2.0 / (13 * st_scale);
-	x_dv = -1.0 / (13 * st_scale);
+	double x_du = (this->ary_vec_[0].div) * this->ary_vec_[0].Cos() / len0;
+	double x_dv = (this->ary_vec_[1].div) * this->ary_vec_[1].Cos() / len1;
+	//x_du = 2.0 / (13 * st_scale);
+	//x_dv = -1.0 / (13 * st_scale);
+	//x_du = this->ary_vec_[0].div * this->ary_vec_[0].Cos() / len0;
+	//x_dv = this->ary_vec_[0].div * this->ary_vec_[0].Sin() / len1;
 
 	// delta u & delta v (when y += 1)
-	double y_du = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].Sin() / len0;
-	double y_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].Sin() / len1;
-	y_du = 3.0 / (26 * st_scale);
-	y_dv = 5.0 / (26 * st_scale);
+	double y_du = (this->ary_vec_[0].div) * this->ary_vec_[0].Sin() / len0;
+	double y_dv = (this->ary_vec_[1].div) * this->ary_vec_[1].Sin() / len1;
+	//y_du = 3.0 / (26 * st_scale);
+	//y_dv = 5.0 / (26 * st_scale);
+	//y_du = this->ary_vec_[0].div * this->ary_vec_[1].Cos() / len0;
+	//y_dv = this->ary_vec_[0].div * this->ary_vec_[1].Sin() / len1;
 
 	//
 	std::vector<ht_cell> ary_dist;
