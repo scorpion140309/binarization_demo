@@ -5,9 +5,9 @@
 //
 namespace
 {
-	const int DEFAULT_VEC_X = 10;
-	const int DEFAULT_VEC_Y = 50;
-	const int DEFAULT_DIV = 10;
+	const int DEFAULT_VEC_X = 11;
+	const int DEFAULT_VEC_Y = 10;
+	const int DEFAULT_DIV = 1;
 }
 
 //
@@ -61,14 +61,6 @@ int sc::Binarization::ThresholdMatrix::ExeCore_(const unsigned char* a_p_src_img
 		for (t = 0; t < pix_num; t++)
 		{
 			int th = ((t * (pix_max - 1)) / pix_num) + 1;
-			//if (t == 0)
-			//{
-			//	th = 0;
-			//}
-			//else
-			//{
-			//	th = 255;
-			//}
 			ary_scaled_th.push_back(th);
 		}
 

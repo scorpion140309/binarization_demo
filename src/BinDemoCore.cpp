@@ -96,6 +96,7 @@ void sc::BinCore::Create_(void)
 	this->ary_filenames_.clear();
 	//this->ary_filenames_.push_back("input.jpg");
 	this->ary_filenames_.push_back("flower.png");
+	//this->ary_filenames_.push_back("gradation.png");
 	//this->ary_filenames_.push_back("sample.png");
 	this->ary_filenames_.push_back("gray.png");
 	this->ary_filenames_.push_back("dst.png");
@@ -165,7 +166,7 @@ sc::BinDemo::evt sc::BinCore::FuncInit_(void)
 			cv::cvtColor(this->ary_img_[id_src], this->ary_img_[id_gray], cv::COLOR_BGR2GRAY);
 		}
 		// @@@
-		//cv::imwrite("gray.png", this->ary_img_[id_gray]);
+		cv::imwrite("gray.png", this->ary_img_[id_gray]);
 
 		auto id_dst = static_cast<size_t>(sc::BinCore::img_type::e_DST);
 		this->ary_img_[id_dst] = cv::Mat(this->ary_img_[id_gray].rows, this->ary_img_[id_gray].cols, CV_8UC1);

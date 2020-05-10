@@ -8,9 +8,14 @@
 #include <vector>
 #include <algorithm>
 
+
+// @@@
+#include <iostream>
+
 //
 namespace
 {
+	long long st_scale = 5;
 }
 
 //
@@ -26,20 +31,20 @@ enum class DOT_COL
 //
 // - - - - - - - - - - - - - - - - - - - - -
 
-//
-static long long sttc_ExtGCD(long long a_x, long long a_y, long long* a_p_coef_a, long long* a_p_coef_b)
+// this funciton retunrs gcd(a_val_x, a_val_y).
+// (*a_p_coef_a) * a_val_x + (*a_r_coef_b) * a_val_y = gcd(a_val_x, a_val_y)
+static long long sttc_extGCD(long long a_val_x, long long a_val_y, long long* a_p_coef_a, long long* a_p_coef_b)
 {
 	long long ret_gcd = 1;
-	if (a_y == 0) {
-		(*a_p_coef_a) = 1;
-		(*a_p_coef_b) = 0;
-		ret_gcd = a_x;
+	if (a_val_y == 0) {
+		*a_p_coef_a = 1;
+		*a_p_coef_b = 0;
+		ret_gcd = a_val_x;
 	}
 	else
 	{
-		long long d = sttc_ExtGCD(a_y, a_x % a_y, a_p_coef_b, a_p_coef_a);
-		a_p_coef_b -= a_x / a_y * (*a_p_coef_a);
-		ret_gcd = d;
+		ret_gcd = sttc_extGCD(a_val_y, a_val_x % a_val_y, a_p_coef_b, a_p_coef_a);
+		*a_p_coef_b -= a_val_x / a_val_y * (*a_p_coef_a);
 	}
 	return ret_gcd;
 }
@@ -141,13 +146,17 @@ void sc::Binarization::Holladay::Create_(int a_x, int a_y, int a_div)
 	this->ary_vec_[1].div = a_div;
 
 	// @@@
-	this->ary_vec_[0].x = 5;
-	this->ary_vec_[0].y = 2;
-	this->ary_vec_[0].div = 1;
-	this->ary_vec_[1].x = -3;
-	this->ary_vec_[1].y = 4;
-	this->ary_vec_[1].div = 1;
-
+	volatile bool v_flag_hoge = false;
+	v_flag_hoge = true;
+	if (v_flag_hoge)
+	{
+		this->ary_vec_[0].x = st_scale * 5;
+		this->ary_vec_[0].y = st_scale * 2;
+		this->ary_vec_[0].div = 1;
+		this->ary_vec_[1].x = st_scale * (-3);
+		this->ary_vec_[1].y = st_scale * 4;
+		this->ary_vec_[1].div = 1;
+	}
 	//
 	this->MakeTile_();
 
@@ -160,20 +169,26 @@ void sc::Binarization::Holladay::Destroy_(void)
 	return;
 }
 
-//
+
+// @@@
+// not fixed
 void sc::Binarization::Holladay::MakeTile_WHS_(void)
 {
 	// pixel num = outer product
 	long long pix_num = this->ary_vec_[0].x * this->ary_vec_[1].y - this->ary_vec_[1].x * this->ary_vec_[0].y;
+	if (pix_num < 0)
+	{
+		pix_num = -pix_num;
+	}
 	if (pix_num != 0)
 	{
 		// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
 		// ax+by=gcd(a,b)
 		long long ary_coef[2] = { 0, };
-		this->tile_h_ = sttc_ExtGCD(this->ary_vec_[0].y, this->ary_vec_[1].y, &(ary_coef[0]), &(ary_coef[1]));
+		this->tile_h_ = sttc_extGCD(this->ary_vec_[0].y, this->ary_vec_[1].y, &(ary_coef[0]), &(ary_coef[1]));
 		this->tile_w_ = pix_num / this->tile_h_;
-		//this->shift_ = (ary_coef[0] * this->ary_vec_[0].x + ary_coef[1] * this->ary_vec_[1].x);
-		this->shift_ = this->tile_w_ - (ary_coef[0] * this->ary_vec_[0].x + ary_coef[1] * this->ary_vec_[1].x);
+		long long ax_by = (ary_coef[0] * this->ary_vec_[0].x + ary_coef[1] * this->ary_vec_[1].x);
+		this->shift_ = this->tile_w_ - ax_by;
 		this->shift_ %= this->tile_w_;
 		if (this->shift_ < 0)
 		{
@@ -192,38 +207,26 @@ void sc::Binarization::Holladay::MakeTile_WHS_(void)
 }
 
 // @@@
-#include <iostream>
-
-//
+// Bug is NOT fixed.
 void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 {
 	//
-	std::vector<ht_cell> ary_dist;
+	double len0 = this->ary_vec_[0].Lenght();
+	double len1 = this->ary_vec_[1].Lenght();
+	// delta u & delta v (when x += 1)
+	double x_du = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].Cos() / len0;
+	double x_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].Cos() / len1;
+	x_du = 2.0 / (13 * st_scale);
+	x_dv = -1.0 / (13 * st_scale);
+
+	// delta u & delta v (when y += 1)
+	double y_du = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].Sin() / len0;
+	double y_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].Sin() / len1;
+	y_du = 3.0 / (26 * st_scale);
+	y_dv = 5.0 / (26 * st_scale);
 
 	//
-	double len2_0 = static_cast<double>(this->ary_vec_[0].x) * this->ary_vec_[0].x + static_cast<double>(this->ary_vec_[0].y) * this->ary_vec_[0].y;
-	double len2_1 = static_cast<double>(this->ary_vec_[1].x) * this->ary_vec_[1].x + static_cast<double>(this->ary_vec_[1].y) * this->ary_vec_[1].y;
-	double len1_0 = std::sqrt(len2_0);
-	double len1_1 = std::sqrt(len2_1);
-	//double len2_01 = len1_0 * len1_1;
-
-	//// X方向に1ピクセル移動したときの delta u, delta v
-	//double x_du = static_cast<double>(this->ary_vec_[0].div * this->ary_vec_[0].x) / (len2_0 * this->ary_vec_[0].x);
-	//double x_dv = - static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].y / (len1_0 * this->ary_vec_[0].x);
-	//// Y方向に1ピクセル移動したときの delta u, delta v
-	//double y_du = x_dv;
-	//double y_dv = - x_du;
-	// X方向に1ピクセル移動したときの delta u, delta v
-	double x_du = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].x / (len1_0 * this->ary_vec_[0].x);
-	double x_dv = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[1].x / (len1_1 * this->ary_vec_[0].x);
-	// Y方向に1ピクセル移動したときの delta u, delta v
-	double y_du = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[0].y / (len1_0 * this->ary_vec_[1].y);
-	double y_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].y / (len1_1 * this->ary_vec_[1].y);
-
-	x_du = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[0].x / (len2_0);
-	x_dv = static_cast<double>(this->ary_vec_[0].div) * this->ary_vec_[1].x / (len2_1);
-	y_du = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[0].y / (len2_0);
-	y_dv = static_cast<double>(this->ary_vec_[1].div) * this->ary_vec_[1].y / (len2_1);
+	std::vector<ht_cell> ary_dist;
 
 	int y;
 	int id;
@@ -255,7 +258,7 @@ void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 	}
 	//
 	std::sort(ary_dist.begin(), ary_dist.end());
-
+	
 	//
 	this->ary_threh_.resize(this->tile_w_ * this->tile_h_);
 	int th_level;
