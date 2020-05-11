@@ -46,13 +46,18 @@ namespace sc
 		//
 		double Sin(void) const
 		{
-			double ret_cos = 0.0;
+			double ret_sin = 0.0;
 			double len = this->Lenght();
 			if (len)
 			{
-				ret_cos = static_cast<double>(this->y) / len;
+				ret_sin = static_cast<double>(this->y) / len;
 			}
-			return ret_cos;
+			return ret_sin;
+		}
+		long long OuterProduct(const VecI& a_r_vec1)
+		{
+			long long ret_op = this->x * a_r_vec1.y - a_r_vec1.x * this->y;
+			return ret_op;
 		}
 	};
 	namespace Binarization
@@ -63,12 +68,13 @@ namespace sc
 			sc::VecI ary_vec_[2];
 			long long tile_w_;
 			long long tile_h_;
+			long long tile_h_s0_;
 			long long shift_;
 			std::vector<int> ary_threh_;
 
 
 			//
-			void Create_(int a_x, int a_y, int a_div);
+			void Create_(int a_x0, int a_y0, int a_div0, int a_x1, int a_y1, int a_div1);
 			void Destroy_(void);
 
 			//
@@ -79,6 +85,7 @@ namespace sc
 		public:
 			Holladay(void);
 			Holladay(int a_x, int a_y, int a_div);
+			Holladay(int a_x0, int a_y0, int a_div0, int a_x1, int a_y1, int a_div1);
 			~Holladay(void);
 
 			long long Width(void) const;

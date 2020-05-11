@@ -59,12 +59,12 @@ void sc::Util::Rand::Init_(void)
 unsigned int sc::Util::Rand::GenerateRand_(void)
 {
 	unsigned int ret_rand = 0;
-	unsigned int t;
+	unsigned int tmp_i;
 
-	t = this->ary_rand_tmp_[0] ^ (this->ary_rand_tmp_[0] << 11);
+	tmp_i = this->ary_rand_tmp_[0] ^ (this->ary_rand_tmp_[0] << 11);
 	this->ary_rand_tmp_[0] = this->ary_rand_tmp_[1];
 	this->ary_rand_tmp_[1] = this->ary_rand_tmp_[2]; this->ary_rand_tmp_[2] = this->ary_rand_tmp_[3];
-	this->ary_rand_tmp_[3] = (this->ary_rand_tmp_[3] ^ (this->ary_rand_tmp_[3] >> 19)) ^ (t ^ (t >> 8));
+	this->ary_rand_tmp_[3] = (this->ary_rand_tmp_[3] ^ (this->ary_rand_tmp_[3] >> 19)) ^ (tmp_i ^ (tmp_i >> 8));
 	ret_rand = this->ary_rand_tmp_[3];
 
 	return ret_rand;

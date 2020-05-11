@@ -5,9 +5,12 @@
 //
 namespace
 {
-	const int DEFAULT_VEC_X = 11;
-	const int DEFAULT_VEC_Y = 10;
-	const int DEFAULT_DIV = 1;
+	const int DEFAULT_VEC_0_X = 20;
+	const int DEFAULT_VEC_0_Y = 5;
+	const int DEFAULT_VEC_0_DIV = 5;
+	const int DEFAULT_VEC_1_X = -30;
+	const int DEFAULT_VEC_1_Y = 41;
+	const int DEFAULT_VEC_1_DIV = 9;
 }
 
 //
@@ -31,7 +34,8 @@ void sc::Binarization::ThresholdMatrix::Create_(void)
 	{
 		delete this->p_hollday_;
 	}
-	this->p_hollday_ = new sc::Binarization::Holladay(DEFAULT_VEC_X, DEFAULT_VEC_Y, DEFAULT_DIV);
+	//this->p_hollday_ = new sc::Binarization::Holladay(DEFAULT_VEC_0_X, DEFAULT_VEC_0_Y, DEFAULT_VEC_0_DIV);
+	this->p_hollday_ = new sc::Binarization::Holladay(DEFAULT_VEC_0_X, DEFAULT_VEC_0_Y, DEFAULT_VEC_0_DIV, DEFAULT_VEC_1_X, DEFAULT_VEC_1_Y, DEFAULT_VEC_1_DIV);
 	return;
 }
 //
@@ -84,11 +88,6 @@ int sc::Binarization::ThresholdMatrix::ExeCore_(const unsigned char* a_p_src_img
 			size_t x;
 			for (x = 0; x < width; x++)
 			{
-				// @@@
-				if (current_x == 0 && current_y == 0)
-				{
-				}
-
 				//
 				int matrix_id = p_th_mtx_line[current_x];
 				int thresh = ary_scaled_th[matrix_id];

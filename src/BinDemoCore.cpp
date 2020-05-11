@@ -83,10 +83,10 @@ void sc::BinCore::Create_(void)
 
 
 	// Binalizing(Halftoning) Funcitons
-	//this->halftoning_type_ = sc::BinCore::ht_type::e_FIXED_THRESH;
+	this->halftoning_type_ = sc::BinCore::ht_type::e_FIXED_THRESH;
 	//this->halftoning_type_ = sc::BinCore::ht_type::e_RANDOM_THRESH;
 	//this->halftoning_type_ = sc::BinCore::ht_type::e_ERR_DIFFUSION;
-	this->halftoning_type_ = sc::BinCore::ht_type::e_THRESH_MATRIX;
+	//this->halftoning_type_ = sc::BinCore::ht_type::e_THRESH_MATRIX;
 	this->dict_bin_functions_[static_cast<int>(sc::BinCore::ht_type::e_FIXED_THRESH)] = &BinCore::Binaliztion_FixedThresh_;
 	this->dict_bin_functions_[static_cast<int>(sc::BinCore::ht_type::e_RANDOM_THRESH)] = &BinCore::Binaliztion_RandomThresh_;
 	this->dict_bin_functions_[static_cast<int>(sc::BinCore::ht_type::e_ERR_DIFFUSION)] = &BinCore::Binaliztion_ErrorDiffusion_;

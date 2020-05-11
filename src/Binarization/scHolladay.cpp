@@ -9,15 +9,6 @@
 #include <algorithm>
 
 
-// @@@
-#include <iostream>
-
-//
-namespace
-{
-	long long st_scale = 1;
-}
-
 //
 enum class DOT_COL
 {
@@ -27,16 +18,53 @@ enum class DOT_COL
 
 // - - - - - - - - - - - - - - - - - - - - -
 //
+// not member functions (ht_cell)
+//
+// - - - - - - - - - - - - - - - - - - - - -
+
+//
+struct ht_cell
+{
+	int id;
+	double dist2;
+	ht_cell(int a_id, double a_dist2) : id(a_id), dist2(a_dist2) {}
+
+	// not implemented
+	ht_cell(void) = delete;
+};
+
+//
+bool operator<(const ht_cell& left, const ht_cell& right)
+{
+	return left.dist2 < right.dist2;
+}
+
+// - - - - - - - - - - - - - - - - - - - - -
+//
 // not member functions
 //
 // - - - - - - - - - - - - - - - - - - - - -
+
+//
+double sttc_SimultaneousEquations(long long a_mtx_2x2[4], long long a_x, long long a_y, double *a_p_u, double *a_p_v)
+{
+	double ret_det = static_cast<double>(a_mtx_2x2[0] * a_mtx_2x2[3] - a_mtx_2x2[1] * a_mtx_2x2[2]);
+	if (ret_det != 0)
+	{
+		double inv = 1.0 / ret_det;
+		*a_p_u = (a_mtx_2x2[3] * a_x - a_mtx_2x2[1] * a_y) * inv;
+		*a_p_v = (- a_mtx_2x2[2] * a_x + a_mtx_2x2[0] * a_y) * inv;
+	}
+	return ret_det;
+}
 
 // this funciton retunrs gcd(a_val_x, a_val_y).
 // (*a_p_coef_a) * a_val_x + (*a_r_coef_b) * a_val_y = gcd(a_val_x, a_val_y)
 static long long sttc_extGCD(long long a_val_x, long long a_val_y, long long* a_p_coef_a, long long* a_p_coef_b)
 {
 	long long ret_gcd = 1;
-	if (a_val_y == 0) {
+	if (a_val_y == 0)
+	{
 		*a_p_coef_a = 1;
 		*a_p_coef_b = 0;
 		ret_gcd = a_val_x;
@@ -86,21 +114,19 @@ static double sttc_power_bw(DOT_COL a_bw, double a_u, double a_v)
 }
 
 //
-struct ht_cell
+static double sttc_CalcDotPower(double a_u, double a_v)
 {
-	int id;
-	double dist2;
-	ht_cell(int a_id, double a_dist2) : id(a_id), dist2(a_dist2) {}
+	double ret_dot_power = 0.0;
 
-	// ŽÀ‘•‚µ‚È‚¢
-	ht_cell(void) = delete;
-};
+	double ratio_b = 0.5;	// [0.0, 1.0]
+	double pow_b = sttc_power_bw(DOT_COL::e_BLACK, a_u, a_v);
+	double pow_w = sttc_power_bw(DOT_COL::e_WHITE, a_u, a_v);
 
-//
-bool operator<(const ht_cell& left, const ht_cell& right)
-{
-	return left.dist2 < right.dist2;
+	ret_dot_power = ratio_b * pow_b + (1.0 - ratio_b) * pow_w;
+
+	return ret_dot_power;
 }
+
 
 ////////////////////////////////////////////
 //
@@ -111,14 +137,20 @@ bool operator<(const ht_cell& left, const ht_cell& right)
 //
 sc::Binarization::Holladay::Holladay(void)
 {
-	this->Create_(10, 10, 1);
+	this->Create_(10, 10, 1, -10, 10, 1);
 	return;
 }
 
 //
 sc::Binarization::Holladay::Holladay(int a_x, int a_y, int a_div)
 {
-	this->Create_(a_x, a_y, a_div);
+	this->Create_(a_x, a_y, a_div, -a_y, a_x, a_div);
+	return;
+}
+//
+sc::Binarization::Holladay::Holladay(int a_x0, int a_y0, int a_div0, int a_x1, int a_y1, int a_div1)
+{
+	this->Create_(a_x0, a_y0, a_div0, a_x1, a_y1, a_div1);
 	return;
 }
 
@@ -133,30 +165,28 @@ sc::Binarization::Holladay::~Holladay(void)
 // private
 //
 //------------------------------------------
-// @@@
+
 // x >= 1, y >= 0
-void sc::Binarization::Holladay::Create_(int a_x, int a_y, int a_div)
+void sc::Binarization::Holladay::Create_(int a_x0, int a_y0, int a_div0, int a_x1, int a_y1, int a_div1)
 {
-	this->ary_vec_[0].x = a_x;
-	this->ary_vec_[0].y = a_y;
-	this->ary_vec_[0].div = a_div;
+	this->ary_vec_[0].x = a_x0;
+	this->ary_vec_[0].y = a_y0;
+	this->ary_vec_[0].div = a_div0;
 
-	this->ary_vec_[1].x = - a_y;
-	this->ary_vec_[1].y = a_x;
-	this->ary_vec_[1].div = a_div;
+	this->ary_vec_[1].x = a_x1;
+	this->ary_vec_[1].y = a_y1;
+	this->ary_vec_[1].div = a_div1;
 
-	// @@@
-	volatile bool v_flag_hoge = false;
-	//v_flag_hoge = true;
-	if (v_flag_hoge)
+	// outer product == 0
+	if (this->ary_vec_[0].OuterProduct(this->ary_vec_[1]) == 0)
 	{
-		this->ary_vec_[0].x = st_scale * 5;
-		this->ary_vec_[0].y = st_scale * 2;
-		this->ary_vec_[0].div = 1;
-		this->ary_vec_[1].x = st_scale * (-3);
-		this->ary_vec_[1].y = st_scale * 4;
-		this->ary_vec_[1].div = 1;
+		this->ary_vec_[0].x = 1;
+		this->ary_vec_[0].y = 0;
+		this->ary_vec_[1].x = 0;
+		this->ary_vec_[1].y = 1;
 	}
+
+
 	//
 	this->MakeTile_();
 
@@ -169,9 +199,7 @@ void sc::Binarization::Holladay::Destroy_(void)
 	return;
 }
 
-
-// @@@
-// not fixed
+// Width, Height, Shift
 void sc::Binarization::Holladay::MakeTile_WHS_(void)
 {
 	// pixel num = outer product
@@ -203,31 +231,40 @@ void sc::Binarization::Holladay::MakeTile_WHS_(void)
 		this->ary_vec_[0] = { 1, 0 };
 		this->ary_vec_[1] = { 0, 1 };
 	}
+
+	//
+	long long tmp_h_s0 = this->tile_h_;
+	if (this->shift_ != 0)
+	{
+		long long tmp_s = this->shift_;
+		do
+		{
+			tmp_h_s0 += this->tile_h_;
+			tmp_s += this->shift_;
+			tmp_s %= this->tile_w_;
+		} while (tmp_s != 0);
+	}
+	this->tile_h_s0_ = tmp_h_s0;
+
 	return;
 }
 
-// @@@
-// Bug is NOT fixed.
+//
 void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 {
 	//
-	double len0 = this->ary_vec_[0].Lenght();
-	double len1 = this->ary_vec_[1].Lenght();
+	double ary_coef[2] = { 0.0, };
+	long long mtx2x2_v0v1[4] = { this->ary_vec_[0].x, this->ary_vec_[1].x, this->ary_vec_[0].y, this->ary_vec_[1].y };
+
 	// delta u & delta v (when x += 1)
-	double x_du = (this->ary_vec_[0].div) * this->ary_vec_[0].Cos() / len0;
-	double x_dv = (this->ary_vec_[1].div) * this->ary_vec_[1].Cos() / len1;
-	//x_du = 2.0 / (13 * st_scale);
-	//x_dv = -1.0 / (13 * st_scale);
-	//x_du = this->ary_vec_[0].div * this->ary_vec_[0].Cos() / len0;
-	//x_dv = this->ary_vec_[0].div * this->ary_vec_[0].Sin() / len1;
+	sttc_SimultaneousEquations(mtx2x2_v0v1, this->tile_w_, 0, &(ary_coef[0]), &(ary_coef[1]));
+	double x_du = (this->ary_vec_[0].div * ary_coef[0]) / (this->tile_w_);
+	double x_dv = (this->ary_vec_[1].div * ary_coef[1]) / (this->tile_w_);
 
 	// delta u & delta v (when y += 1)
-	double y_du = (this->ary_vec_[0].div) * this->ary_vec_[0].Sin() / len0;
-	double y_dv = (this->ary_vec_[1].div) * this->ary_vec_[1].Sin() / len1;
-	//y_du = 3.0 / (26 * st_scale);
-	//y_dv = 5.0 / (26 * st_scale);
-	//y_du = this->ary_vec_[0].div * this->ary_vec_[1].Cos() / len0;
-	//y_dv = this->ary_vec_[0].div * this->ary_vec_[1].Sin() / len1;
+	sttc_SimultaneousEquations(mtx2x2_v0v1, 0, this->tile_h_s0_, &(ary_coef[0]), &(ary_coef[1]));
+	double y_du = (this->ary_vec_[0].div * ary_coef[0]) / (this->tile_h_s0_);
+	double y_dv = (this->ary_vec_[1].div * ary_coef[1]) / (this->tile_h_s0_);
 
 	//
 	std::vector<ht_cell> ary_dist;
@@ -243,15 +280,9 @@ void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 		int x;
 		for (x = 0; x < this->tile_w_; x++, id++)
 		{
-			double ratio_b = 0.5;	// [0, 1]
-
-			int new_th = 1;
-			double pow_b = sttc_power_bw(DOT_COL::e_BLACK, curr_u, curr_v);
-			double pow_w = sttc_power_bw(DOT_COL::e_WHITE, curr_u, curr_v);
-			double pow_dot = ratio_b * pow_b + (1.0 - ratio_b) * pow_w;
-			ht_cell data(id, pow_dot);
+			double dot_power = sttc_CalcDotPower(curr_u, curr_v);
+			ht_cell data(id, dot_power);
 			ary_dist.push_back(data);
-			this->ary_threh_.push_back(new_th);
 
 			//
 			curr_u += x_du;
@@ -271,17 +302,6 @@ void sc::Binarization::Holladay::MakeTile_ThresholdMatrix_(void)
 	{
 		this->ary_threh_[itr->id] = th_level;
 	}
-
-	// @@@
-	//for (y = 0, id = 0; y < this->tile_h_; y++)
-	//{
-	//	int x;
-	//	for (x = 0; x < this->tile_w_; x++, id++)
-	//	{
-	//		std::cout << this->ary_threh_[id] << ",";
-	//	}
-	//	std::cout << std::endl;
-	//}
 
 	return;
 }

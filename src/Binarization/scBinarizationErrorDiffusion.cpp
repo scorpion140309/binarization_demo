@@ -87,6 +87,7 @@ int sc::Binarization::ErrorDiffusion::ExeCore_(const unsigned char* a_p_src_img,
 
 				// error diffusion
 				//	error = src - dst
+				//const int ERR_COEF[ERR_LINE_NUM][3] = { {0, 0, 7}, {3, 5, 1} };
 				const int ERR_COEF[ERR_LINE_NUM][3] = { {0, 0, 5}, {3, 5, 3} };
 				int ly;
 				for (ly = 0; ly < ERR_LINE_NUM; ly++)
