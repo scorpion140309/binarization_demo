@@ -2,7 +2,7 @@
 
 Binarization(Image Processing) Demo
 
-Input(gray) & Output(fixed threshold, random threshod, error diffusion)
+Input(gray) & Output(fixed threshold, random threshod, error diffusion, Halftoning)
 ![Screen Shot](binarization_demo.png "Screen Shot")
 
 State Machine
